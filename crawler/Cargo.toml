@@ -1,0 +1,12 @@
+[package]
+name = "crawler"
+version = "0.1.0"
+authors = ["Abel Calluaud <abelcd@protonmail.com>"]
+edition = "2018"
+
+[dependencies]
+reqwest = "0.10.2"
+tokio = { version = "0.2.11", features = ["full"] }
+html5ever = "0.25.1"
+url = "2.1.1"
+mime = "0.3.16"
