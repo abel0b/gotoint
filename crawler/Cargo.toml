@@ -5,8 +5,11 @@ authors = ["Abel Calluaud <abelcd@protonmail.com>"]
 edition = "2018"
 
 [dependencies]
-reqwest = "0.10.2"
+reqwest = { version = "0.10.2", features = ["json"] }
 tokio = { version = "0.2.11", features = ["full"] }
 html5ever = "0.25.1"
 url = "2.1.1"
 mime = "0.3.16"
+serde = { version = "1.0.104", features = ["derive"] }
+serde_json = "1.0.48"
+couchdb = "0.6.0"
