@@ -1,0 +1,29 @@
+version: "3"
+
+services:
+    crawler:
+        environment:
+            - RUST_LOG=crawler
+        build: crawler
+        tty: true
+        volumes:
+            - ".:/usr/src/app"
+        depends_on:
+            - couchdb
+            - redis
+            - rabbitmq
+    couchdb:
+        image: couchdb:3
+        volumes:
+            - "./crawler/local.ini:/opt/couchdb/etc/local.d/local.ini"
+        ports:
+            - "5984:5984"
+    redis:
+        image: redislabs/rebloom:latest
+        ports:
+            - "6379:6379"
+    rabbitmq:
+        image: rabbitmq:3-management
+        ports:
+            - "5672:5672"
+            - "15672:15672"

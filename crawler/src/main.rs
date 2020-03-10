@@ -1,15 +1,20 @@
 mod crawler;
 mod page;
+mod webfilter;
+mod urlfilter;
 
 use crawler::Crawler;
 use std::collections::VecDeque;
 
 #[tokio::main]
 async fn main() {
-    let mut seed = VecDeque::new();
-    seed.push_back("https://wikipedia.org".to_string());
-    seed.push_back("https://reddit.com".to_string());
+    pretty_env_logger::init();
 
-    let mut crawler = Crawler::new(seed);
-    crawler.crawl().await;
+    let mut crawler = Crawler::new().await;
+    crawler.crawl({
+        let mut seed = VecDeque::new();
+        seed.push_back("https://example.org".to_string());
+        seed.push_back("https://wikipedia.org".to_string());
+        seed
+    }).await;
 }

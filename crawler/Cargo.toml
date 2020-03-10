@@ -3,13 +3,20 @@ name = "crawler"
 version = "0.1.0"
 authors = ["Abel Calluaud <abelcd@protonmail.com>"]
 edition = "2018"
+homepage = "https://github.com/abel0b/roogle"
+repository = "https://github.com/abel0b/roogle"
 
 [dependencies]
 reqwest = { version = "0.10.2", features = ["json"] }
-tokio = { version = "0.2.11", features = ["full"] }
+tokio = { version = "0.2.11", features = ["rt-threaded", "macros"] }
 html5ever = "0.25.1"
 url = "2.1.1"
 mime = "0.3.16"
 serde = { version = "1.0.104", features = ["derive"] }
 serde_json = "1.0.48"
-couchdb = "0.6.0"
+redis = { version = "0.15.1", features = ["tokio-rt-core"] }
+lapin = { version = "0.32.0", features = ["futures"] }
+futures = { version = "0.3", features = ["thread-pool"] }
+log = "0.4.8"
+pretty_env_logger = "0.4.0"
+whatlang = "0.7.3"
