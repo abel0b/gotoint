@@ -1,0 +1,61 @@
+<html>
+    <head>
+        <title>gotoint</title>
+        <style>
+            body {
+                font-size: 18px;
+            }
+            main {
+                width: 600px;
+                margin: 0 auto;
+                margin-top: 200px;
+            }
+            form {
+                display: flex;
+            }
+            h1 {
+                font-family: monospace;
+                color: blue;
+            }
+            form input {
+                flex-grow: 1;
+                border-radius: 2px 0 0 2px;
+                height: 3em;
+                line-height: 3em;
+                border: 1px solid #cecece;
+                padding: 0 1em;
+            }
+            form input:focus {
+                border-color: blue;
+            }
+            form button {
+                flex-grow: 0;
+                border-radius: 0 2px 2px 0;
+                height: 3em;
+                line-height: 3em;
+                border: 1px solid #cecece;
+                border-left: none;
+                padding: 0 1em;
+            }
+            .logo {
+                color: #262626;
+            }
+            .logo span {
+                background: #0125b1;
+                color: #15d533;
+                padding: 0 0.2em;
+                margin-left: 0.1em;
+                border-radius: 2px;
+            }
+        </style>
+    </head>
+    <body>
+        <main>
+            <h1 class="logo">goto<span>int</span></h1>
+            <form>
+                <input type="text" placeholder="ex: internet">
+                <button type="submit">Search</button>
+            </form>
+        </main>
+    </body>
+</html>

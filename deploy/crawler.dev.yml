@@ -4,10 +4,12 @@ services:
     crawler:
         environment:
             - RUST_LOG=crawler
-        build: crawler
         tty: true
+        image: abel0b/rust-dev
         volumes:
-            - ".:/usr/src/app"
+            - "..:/usr/src/app"
+        command:
+            - run --bin crawler
         depends_on:
             - couchdb
             - redis
@@ -15,7 +17,8 @@ services:
     couchdb:
         image: couchdb:3
         volumes:
-            - "./crawler/local.ini:/opt/couchdb/etc/local.d/local.ini"
+            - "../couchdb.ini:/opt/couchdb/etc/local.d/local.ini"
+            - "../storage/couchdb:/opt/couchdb/data"
         ports:
             - "5984:5984"
     redis:

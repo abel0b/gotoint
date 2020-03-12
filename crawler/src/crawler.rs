@@ -13,6 +13,7 @@ use std::sync::{Mutex, Arc};
 use log::{info, trace};
 use crate::webfilter;
 use crate::urlfilter;
+use crate::tokenizer;
 
 #[derive(Eq, PartialEq)]
 enum LinkSinkState {
@@ -61,14 +62,15 @@ impl TokenSink for LinkSink {
                         }
 
                        if tag.name == LocalName::from("a") {
-                                if let Some(href) = tag.attrs.iter().find(|&attr| attr.name.local == LocalName::from("href")) {
-                                    if let Ok(link) = self.base_url.join(&href.value) {
-                                        let url = link.to_string();
-                                        if urlfilter::pass(&url) {
-                                            self.links.push_back(url);
-                                        }
+                           // TODO: ignore nofollow links
+                            if let Some(href) = tag.attrs.iter().find(|&attr| attr.name.local == LocalName::from("href")) {
+                                if let Ok(link) = self.base_url.join(&href.value) {
+                                    let url = link.to_string();
+                                    if urlfilter::pass(&url) {
+                                        self.links.push_back(url);
                                     }
                                 }
+                            }
                         }
                         else if tag.name == LocalName::from("script") {
                             self.state = LinkSinkState::Script; 
@@ -87,6 +89,7 @@ impl TokenSink for LinkSink {
             CharacterTokens(str) => {
                 if self.state == LinkSinkState::Body {
                     self.extract.push_str(&str);
+                    self.extract.push(' ');
                 }
             },
             _ => {},
@@ -113,7 +116,7 @@ impl Worker {
         let http_client = reqwest::ClientBuilder::new()
             .default_headers({
                 let mut headers = reqwest::header::HeaderMap::new();
-                headers.insert(reqwest::header::USER_AGENT, reqwest::header::HeaderValue::from_str(format!("roogle/{} Web search engine {}", env!("CARGO_PKG_VERSION"), env!("CARGO_PKG_HOMEPAGE")).as_str()).unwrap());
+                headers.insert(reqwest::header::USER_AGENT, reqwest::header::HeaderValue::from_str(format!("gotoint/{} Web search engine {}", env!("CARGO_PKG_VERSION"), env!("CARGO_PKG_HOMEPAGE")).as_str()).unwrap());
                 headers
             })
             .timeout(std::time::Duration::from_secs(5))
@@ -134,14 +137,16 @@ impl Worker {
         trace!("worker {} > started", self.id);
         loop {
             let url = {
-                let mut crawl_jobs = self.crawl_jobs.lock().unwrap();
-                match crawl_jobs.pop_front() {
+                let next_job = {
+                    self.crawl_jobs.lock().unwrap().pop_front()
+                };
+                match next_job {
                     Some(url) => url,
                     None => {
                         trace!("worker {} > continue", self.id);
-                        std::thread::sleep(
-                            std::time::Duration::from_secs(1)
-                        );
+                        tokio::time::delay_for(
+                            std::time::Duration::from_secs(10)
+                        ).await;
                         continue
                     },
                 }
@@ -165,24 +170,24 @@ impl Worker {
                                             if let Ok(body) = response.text().await {
                                                 trace!("worker {} > parse {}", self.id, url);
                                                 let (links, extract) = {
-                                                    let mut tokenizer: Tokenizer<LinkSink> = Tokenizer::new(
+                                                    let mut html_tokenizer: Tokenizer<LinkSink> = Tokenizer::new(
                                                         LinkSink::new(base),
                                                         TokenizerOpts::default(),
                                                     );
 
                                                     let mut buffer = BufferQueue::new();
                                                     buffer.push_back(body.into());
-                                                    let _ = tokenizer.feed(&mut buffer);
-                                                    (tokenizer.sink.links, tokenizer.sink.extract)
+                                                    let _ = html_tokenizer.feed(&mut buffer);
+                                                    (html_tokenizer.sink.links, tokenizer::process(html_tokenizer.sink.extract))
                                                 };
-                                                newlinks = Some(links);
                                                 
                                                 let res: redis::RedisResult<bool> = redis::cmd("BF.ADD").arg(Self::VISITED_KEY).arg(&url).query_async(&mut self.redis).await;
                                                 res.unwrap();
-                                                
+
                                                 let page = Page::new(url.clone(), extract);
                                                 if webfilter::pass(&page) {
                                                     self.total_success += 1;
+                                                    newlinks = Some(links);
                                                     let _res = self.http_client
                                                     .post("http://admin:fixme@couchdb:5984/pages")
                                                     .json(&page)
@@ -303,10 +308,13 @@ impl Crawler {
 
     pub async fn crawl(&mut self, mut seed: VecDeque<String>) {
         let res : redis::RedisResult<bool> = redis::Cmd::exists(Self::VISITED_KEY).query_async(&mut self.redis).await;
-        if !res.unwrap() {
-            let res: redis::RedisResult<String> = redis::cmd("BF.RESERVE").arg(Self::VISITED_KEY).arg(Self::ERROR_RATE).arg(Self::CAPACITY).query_async(&mut self.redis).await;
+        if res.unwrap() {
+            let res : redis::RedisResult<bool> = redis::Cmd::del(Self::VISITED_KEY).query_async(&mut self.redis).await;
             res.unwrap();
         }
+
+        let res: redis::RedisResult<String> = redis::cmd("BF.RESERVE").arg(Self::VISITED_KEY).arg(Self::ERROR_RATE).arg(Self::CAPACITY).query_async(&mut self.redis).await;
+        res.unwrap();
 
         let http_client = reqwest::Client::new();
         http_client

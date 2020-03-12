@@ -1,0 +1,32 @@
+version: "3"
+
+services:
+    index:
+        environment:
+            - RUST_LOG=index
+        tty: true
+        image: abel0b/rust-dev
+        volumes:
+            - "..:/usr/src/app"
+        command:
+            - run --bin index
+        depends_on:
+            - couchdb
+            - redis
+            - rabbitmq
+    couchdb:
+        image: couchdb:3
+        volumes:
+            - "../couchdb.ini:/opt/couchdb/etc/local.d/local.ini"
+            - "../storage/couchdb:/opt/couchdb/data"
+        ports:
+            - "5984:5984"
+    redis:
+        image: redislabs/rebloom:latest
+        ports:
+            - "6379:6379"
+    rabbitmq:
+        image: rabbitmq:3-management
+        ports:
+            - "5672:5672"
+            - "15672:15672"

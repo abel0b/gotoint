@@ -1,4 +1,4 @@
-# Roogle
+# gotoint
 Web search engine.
 
 ## Tasks
@@ -14,16 +14,32 @@ Web search engine.
     - [ ] Re-crawling
     - [ ] Handling crawling traps, too long urls
     - [ ] Distributed
-    - [x] Language detection ([whatlang?](https://github.com/greyblake/whatlang-rs) + html tag)
+    - [x] Language detection
     - [ ] Duplicate detection
     - [ ] DNS cache
 - [ ] Index
 - [ ] Query
     - [ ] Webapp
+- [ ] Project name
+
+Check out
+- [SMOG](https://en.wikipedia.org/wiki/SMOG)
+- [Bloom filter](https://en.wikipedia.org/wiki/Bloom_filter)
+- [TrustRank](https://en.wikipedia.org/wiki/TrustRank)
+- [HITS algorithm](https://en.wikipedia.org/wiki/HITS_algorithm)
 
 ## Deploy for development
+Crawl pages.
 ```bash
-docker-compose up
+docker-compose -f deploy/crawler.dev.yml up
+```
+Build inverted index.
+```bash
+docker-compose -f deploy/index.dev.yml up
+```
+Start web server.
+```bash
+docker-compose -f deploy/dev.yml up
 ```
 
 ## References

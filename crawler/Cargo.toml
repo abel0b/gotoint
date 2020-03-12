@@ -8,7 +8,7 @@ repository = "https://github.com/abel0b/roogle"
 
 [dependencies]
 reqwest = { version = "0.10.2", features = ["json"] }
-tokio = { version = "0.2.11", features = ["rt-threaded", "macros"] }
+tokio = { version = "0.2.11", features = ["rt-threaded", "macros", "time"] }
 html5ever = "0.25.1"
 url = "2.1.1"
 mime = "0.3.16"
@@ -20,3 +20,4 @@ futures = { version = "0.3", features = ["thread-pool"] }
 log = "0.4.8"
 pretty_env_logger = "0.4.0"
 whatlang = "0.7.3"
+toml = "0.5.6"
